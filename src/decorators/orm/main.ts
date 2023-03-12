@@ -8,7 +8,7 @@ interface Connection {
 class PostgreSQLConnection implements Connection {
     pgPromise: any;
     constructor(){
-        this.pgPromise = pgPromise()("postgres://postgres:123456@localhost:5432/app"); 
+        this.pgPromise = pgPromise()("postgres://postgres:postgres@127.0.0.1:5432/app"); 
     }
 
     query(statement: string, params: any): Promise<any> {
@@ -26,7 +26,7 @@ class ORM {
     async save(entity: Entity){
         // const params: any = [];
         // this.connection.query(`insert into ${entity.schema}.${entity.table}...`, params);
-        this.connection.query("insert into branas.book (title, author) values ($1, $2)", ["Clean Code", "Robert Martin"]);
+        this.connection.query("insert into branas.book (title, author) values ($1, $2)", ["Harry Potter", "Sophie Alguem"]);
     }
 }
 
@@ -46,9 +46,12 @@ class Book extends Entity {
     }
 }
 
-async function init() {
+async function init () {
     const connection = new PostgreSQLConnection();
     const orm = new ORM(connection);
     const book = new Book("Clean Code", "Robert Martin");
     await orm.save(book);    
+    await connection.close();
 }
+
+init();
