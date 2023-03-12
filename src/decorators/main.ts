@@ -1,20 +1,37 @@
-import { OrganizeImportsMode } from "typescript";
-
+import pgPromise from "pg-promise";
 
 interface Connection {
     query(statement: string, params: any): Promise<any>;
     close(): Promise<void>;
 }
-class ORM{
-    async save(entity: Entity){
 
+class PostgreSQLConnection implements Connection {
+    pgPromise: any;
+    constructor(){
+        this.pgPromise = pgPromise()("postgres://postgres:123456@localhost:5432/app"); 
     }
 
+    query(statement: string, params: any): Promise<any> {
+        return this.pgPromise.query(statement, params)
+    }
+
+    close(): Promise<void> {
+        throw new Error("Method not implemented.")
+    }
 }
 
-class Entity{
+class ORM {
+    constructor(readonly connection: Connection){
+    }
+    async save(entity: Entity){
+        const params: any = [];
+        this.connection.query(`insert into ${entity.schema}.${entity.table}...`, params);
+    }
+}
 
-
+class Entity {
+    declare schema: string;
+    declare table: string;
 }
 
 class Book extends Entity {
