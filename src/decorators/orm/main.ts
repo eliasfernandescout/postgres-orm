@@ -16,7 +16,7 @@ class PostgreSQLConnection implements Connection {
     }
 
     close(): Promise<void> {
-        throw new Error("Method not implemented.")
+        return this.pgPromise.$pool.end();
     }
 }
 
@@ -24,8 +24,9 @@ class ORM {
     constructor(readonly connection: Connection){
     }
     async save(entity: Entity){
-        const params: any = [];
-        this.connection.query(`insert into ${entity.schema}.${entity.table}...`, params);
+        // const params: any = [];
+        // this.connection.query(`insert into ${entity.schema}.${entity.table}...`, params);
+        this.connection.query("insert into branas.book (title, author) values ($1, $2)", ["Clean Code", "Robert Martin"]);
     }
 }
 
@@ -46,7 +47,8 @@ class Book extends Entity {
 }
 
 async function init() {
+    const connection = new PostgreSQLConnection();
+    const orm = new ORM(connection);
     const book = new Book("Clean Code", "Robert Martin");
-    const orm = new ORM();
     await orm.save(book);    
 }
