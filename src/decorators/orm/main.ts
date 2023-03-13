@@ -30,6 +30,10 @@ class ORM {
         const statement = `insert into ${entity.schema}.${entity.table} (${columns}) values (${params})`;
         this.connection.query(statement, [...values]);
     }
+
+    async list (){
+        return this.connection.query("select * from branas.book", []);
+    }
 }
 
 class Entity {
@@ -68,11 +72,27 @@ class Book extends Entity {
     }
 }
 
+@entity({schema: "branas", table: "car"})
+class Car extends Entity {
+    @column({name: "br"})
+    brand: string;
+    @column({name: "md"})
+    carModel: string;
+
+    constructor(brand: string, carModel: string){
+        super();
+        this.brand = brand;
+        this.carModel = carModel;
+    }
+}
+
 async function init () {
     const connection = new PostgreSQLConnection();
     const orm = new ORM(connection);
-    const book = new Book("Clean Code", "Robert Martin");
-    await orm.save(book);    
+    const book = new Book("A virtude do Egoismo", "Ayn Rand");
+    await orm.save(book);
+    const books = await orm.list();
+    console.log(books)
     await connection.close();
 }
 
