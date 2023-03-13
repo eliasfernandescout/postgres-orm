@@ -1,4 +1,4 @@
-import pgPromise from "pg-promise";
+import pgPromise, { Column } from "pg-promise";
 
 interface Connection {
     query(statement: string, params: any): Promise<any>;
@@ -24,19 +24,41 @@ class ORM {
     constructor(readonly connection: Connection){
     }
     async save(entity: Entity){
-        // const params: any = [];
-        // this.connection.query(`insert into ${entity.schema}.${entity.table}...`, params);
-        this.connection.query("insert into branas.book (title, author) values ($1, $2)", ["Harry Potter", "Sophie Alguem"]);
+        const columns = entity.columns.map(column => column.column).join(",")
+        const params = entity.columns.map((column, index)=> `$${index + 1}`).join(",");
+        const values = entity.columns.map(column => entity[column.property]);
+        const statement = `insert into ${entity.schema}.${entity.table} (${columns}) values (${params})`;
+        this.connection.query(statement, [...values]);
     }
 }
 
 class Entity {
     declare schema: string;
     declare table: string;
+    declare columns : {property: string, column : string}[];
+    [key: string]: any;
 }
 
+function entity(config: {schema: string, table: string}){
+    return (constructor: Function) => {
+        constructor.prototype.schema = config.schema;
+        constructor.prototype.table = config.table;
+    }
+}
+
+function column(config: {name: string}){
+    return (target: Entity, propertyKey: string) => {
+        target.columns = target.columns || [];
+        target.columns.push({property: propertyKey, column: config.name});
+    }
+}
+
+
+@entity({schema: "branas", table: "book"})
 class Book extends Entity {
+    @column({name: "title"})
     title: string;
+    @column({name: "author"})
     author: string
 
     constructor(title: string, author: string){
